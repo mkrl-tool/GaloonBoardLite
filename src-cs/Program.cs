@@ -261,11 +261,17 @@ namespace GaloonBoard
 
         private Rectangle rectPrevDay, rectToday, rectNextDay;
         private Rectangle rectPin, rectRefresh, rectMinus, rectPlus, rectSettings, rectMinimize, rectClose;
+        private ToolTip buttonToolTip;
+        private string lastToolTipText = "";
 
         public WhiteboardForm()
         {
             config = Config.Load();
             currentDate = DateTime.Today;
+
+            buttonToolTip = new ToolTip();
+            buttonToolTip.InitialDelay = 250;
+            buttonToolTip.ReshowDelay = 100;
 
             this.Text = "行動予定表";
             this.FormBorderStyle = FormBorderStyle.None;
@@ -805,6 +811,78 @@ namespace GaloonBoard
             }
         }
 
+        private void DrawRefreshIcon(Graphics g, Rectangle r, Color color)
+        {
+            var sm = g.SmoothingMode;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+
+            float cx = r.X + r.Width / 2f;
+            float cy = r.Y + r.Height / 2f;
+            float radius = 4.8f;
+
+            using (var pen = new Pen(color, 1.8f))
+            {
+                g.DrawArc(pen, cx - radius, cy - radius, radius * 2f, radius * 2f, -30f, 290f);
+            }
+
+            using (var brush = new SolidBrush(color))
+            {
+                PointF[] arrow = new PointF[]
+                {
+                    new PointF(cx + 1.2f, cy - radius - 3.2f),
+                    new PointF(cx + 6.2f, cy - radius + 0.5f),
+                    new PointF(cx + 1.2f, cy - radius + 3.8f)
+                };
+                g.FillPolygon(brush, arrow);
+            }
+
+            g.SmoothingMode = sm;
+        }
+
+        private void DrawPinIcon(Graphics g, Rectangle r, bool isPinned, Color normalColor)
+        {
+            var sm = g.SmoothingMode;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+
+            float cx = r.X + r.Width / 2f;
+            float cy = r.Y + r.Height / 2f;
+
+            Color color = isPinned ? Color.FromArgb(2, 132, 199) : normalColor;
+
+            using (var pen = new Pen(color, 1.5f))
+            using (var brush = new SolidBrush(color))
+            {
+                // ピンの頭部ツマミ
+                g.DrawLine(pen, cx - 3.5f, cy - 5f, cx + 3.5f, cy - 5f);
+
+                // ピンの胴体
+                PointF[] body = new PointF[]
+                {
+                    new PointF(cx - 2.5f, cy - 5f),
+                    new PointF(cx + 2.5f, cy - 5f),
+                    new PointF(cx + 1.2f, cy + 0.5f),
+                    new PointF(cx - 1.2f, cy + 0.5f)
+                };
+
+                if (isPinned)
+                {
+                    g.FillPolygon(brush, body);
+                }
+                else
+                {
+                    g.DrawPolygon(pen, body);
+                }
+
+                // つば
+                g.DrawLine(pen, cx - 3.5f, cy + 0.5f, cx + 3.5f, cy + 0.5f);
+
+                // 針
+                g.DrawLine(pen, cx, cy + 0.5f, cx, cy + 5.5f);
+            }
+
+            g.SmoothingMode = sm;
+        }
+
         private void DrawTopControls(Graphics g, int y, int w)
         {
             using (var font = new Font("Segoe UI", 8))
@@ -849,8 +927,11 @@ namespace GaloonBoard
                     g.DrawString("-", fontZoom, brush, rectMinus.X + 4, rectMinus.Y - 2);
                 }
 
-                g.DrawString("🔄", font, brush, rectRefresh.X + 2, rectRefresh.Y + 2);
-                g.DrawString(config.AlwaysOnTop ? "📌" : "📍", font, brush, rectPin.X + 2, rectPin.Y + 2);
+                // 🔄 -> ベクター描画
+                DrawRefreshIcon(g, rectRefresh, Color.FromArgb(100, 116, 139));
+
+                // 📌 -> ベクター描画（固定中はアクティブカラー）
+                DrawPinIcon(g, rectPin, config.AlwaysOnTop, Color.FromArgb(100, 116, 139));
             }
         }
 
@@ -907,7 +988,74 @@ namespace GaloonBoard
                 }
             }
 
-            if (isOverRow)
+            string toolTipText = "";
+            bool isOverControl = false;
+
+            if (rectPin.Contains(e.Location))
+            {
+                toolTipText = config.AlwaysOnTop ? "最前面固定: ON (クリックで解除)" : "最前面に固定 (OFF)";
+                isOverControl = true;
+            }
+            else if (rectRefresh.Contains(e.Location))
+            {
+                toolTipText = "今すぐ予定を更新";
+                isOverControl = true;
+            }
+            else if (rectMinus.Contains(e.Location))
+            {
+                toolTipText = "文字サイズを縮小 (-)";
+                isOverControl = true;
+            }
+            else if (rectPlus.Contains(e.Location))
+            {
+                toolTipText = "文字サイズを拡大 (+)";
+                isOverControl = true;
+            }
+            else if (rectSettings.Contains(e.Location))
+            {
+                toolTipText = "設定 (ガルーン接続・表示ユーザー)";
+                isOverControl = true;
+            }
+            else if (rectMinimize.Contains(e.Location))
+            {
+                toolTipText = "最小化";
+                isOverControl = true;
+            }
+            else if (rectClose.Contains(e.Location))
+            {
+                toolTipText = "閉じる";
+                isOverControl = true;
+            }
+            else if (rectPrevDay.Contains(e.Location))
+            {
+                toolTipText = "前日の予定";
+                isOverControl = true;
+            }
+            else if (rectToday.Contains(e.Location))
+            {
+                toolTipText = "本日の予定に戻る";
+                isOverControl = true;
+            }
+            else if (rectNextDay.Contains(e.Location))
+            {
+                toolTipText = "翌日の予定";
+                isOverControl = true;
+            }
+
+            if (toolTipText != lastToolTipText)
+            {
+                lastToolTipText = toolTipText;
+                if (!string.IsNullOrEmpty(toolTipText))
+                {
+                    buttonToolTip.SetToolTip(this, toolTipText);
+                }
+                else
+                {
+                    buttonToolTip.SetToolTip(this, null);
+                }
+            }
+
+            if (isOverRow || isOverControl)
             {
                 this.Cursor = Cursors.Hand;
             }

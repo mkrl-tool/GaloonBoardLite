@@ -16,7 +16,7 @@ if not exist "%CSC%" (
 )
 
 echo Compiling GaloonBoardLite.exe ...
-"%CSC%" /target:winexe /optimize /win32manifest:app.manifest /win32icon:icon.ico /out:GaloonBoardLite.exe Program.cs
+"%CSC%" /target:winexe /optimize /codepage:65001 /win32manifest:app.manifest /win32icon:icon.ico /out:GaloonBoardLite.exe Program.cs
 
 if %errorlevel% equ 0 (
     echo [SUCCESS] GaloonBoardLite.exe generated successfully!
