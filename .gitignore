@@ -1,0 +1,22 @@
+# Configuration files (contains passwords/URLs)
+board_config.txt
+config.json
+*.local.txt
+
+# Ignore large Python exe files
+dist/GaloonBoard.exe
+dist/GaloonYotei.exe
+dist/board_config.txt
+dist/config.json
+__pycache__/
+*.pyc
+build/
+*.spec
+
+# C# build artifacts in src-cs
+src-cs/*.exe
+src-cs/*.pdb
+
+# Tauri build artifacts
+tauri-board/src-tauri/target/
+tauri-board/ui/node_modules/

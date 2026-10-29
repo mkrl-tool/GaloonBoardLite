@@ -1,0 +1,46 @@
+{
+  "$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/dev/tooling/cli/schema.json",
+  "build": {
+    "beforeBuildCommand": "",
+    "beforeDevCommand": "",
+    "devPath": "ui",
+    "distDir": "ui"
+  },
+  "package": {
+    "productName": "GaloonBoard",
+    "version": "1.0.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false,
+      "window": {
+        "all": true
+      }
+    },
+    "bundle": {
+      "active": true,
+      "category": "Productivity",
+      "copyright": "",
+      "icon": [
+        "../assets/icon.ico"
+      ],
+      "identifier": "com.garoon.board",
+      "targets": ["msi", "nsis"]
+    },
+    "security": {
+      "csp": null
+    },
+    "windows": [
+      {
+        "title": "行動予定表",
+        "width": 370,
+        "height": 690,
+        "resizable": true,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": false,
+        "center": true
+      }
+    ]
+  }
+}
